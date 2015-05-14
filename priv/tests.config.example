@@ -1,0 +1,79 @@
+%% -*- erlang-indent-level: 4;indent-tabs-mode: nil; fill-column: 92-*-
+%% ex: ts=4 sw=4 et
+%%
+%% Copyright (C) 2015 Marc A. Paradise
+%% This is copyrighted under the terms of the Apache v2 License,
+%% which can be found in ../LICENSE
+
+{concurrent, 150}.
+{mode, max}.
+{duration, 1}.
+
+% Copy this file to priv/tests.config and modify it. See README.md for details
+
+
+% Leave this true for now, or else it crashes without generating a report
+% because basho isn't terminating active workers before it calls our post_hook -
+% which means we can't cleanly shut down and destroy the db
+% Instead, the DB will be destroyed and recreated on init.
+{destroy_db_on_finish, false}.
+
+{driver, sqerlbench}.
+{operations, [{select_hit, 4},
+              {select_miss, 2},
+              {statement, 1},
+              {statement_del, 1}]}.
+
+{pre_hook,{sqerlbench_tools,setup}}.
+{post_hook,{sqerlbench_tools,cleanup}}.
+
+{config,
+ [
+     {postgres, [ {db_root_user, "USERNAME"},
+                  {db_root_password, "PASSWOD"},
+                  {schema, "schema.sql" },
+                  {populate, "populate.sql" } ]},
+     {sqerl, [ {db_driver_mod, sqerl_pgsql_client},
+               {db_host, "localhost"},
+               {db_port, 5432},
+               % This user will be created with the credentials below,
+               % and destroyed with each run of the tests.
+               {db_user, "itest"},
+               {db_pass, "hunter*****"},
+               {db_name, "itest"},
+               {column_transforms,
+                                  [{<<"created_at">>, {sqerl_transformers, convert_YMDHMS_tuple_to_datetime}},
+                                   {<<"updated_at">>, {sqerl_transformers, convert_YMDHMS_tuple_to_datetime}}]},
+               % High value because we don't really need an idle check:
+               % when running 'bench, we don't get idle time...
+               {idle_check, 100000},
+               {pooler_timeout, 10000},
+               {prepared_statements,
+                % If you add more prepared staements, don't forget to update tests.config.example with them.
+                [ {fetch_node, <<"SELECT * FROM nodes WHERE ID = $1">>},
+                  {delete_node, <<"DELETE FROM nodes WHERE ID = $1">>},
+                  {insert_node, <<"INSERT INTO NODES (id, authz_id, org_id, name, environment,
+                                                      last_updated_by, created_at, updated_at)
+                                              VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)">>}
+                ]
+               }
+            ]},
+      {pooler, [
+              {pools, [[{name, sqerl},
+                        {max_count, 300},
+                        {init_count, 300},
+                        {start_mfa, {sqerl_client, start_link, []}},
+                        {queue_max, 0},
+                        {queue_wait, 2000}]]},
+              {metrics_module, folsom_metrics}
+              ]}
+ ]
+}.
+
+{code_paths, [
+  "ebin",
+  "deps/sqerl/ebin",
+  "deps/epgsql/ebin",
+  "deps/envy/ebin",
+  "deps/pooler/ebin"]}.
+

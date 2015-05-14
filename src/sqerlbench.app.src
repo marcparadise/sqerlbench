@@ -1,0 +1,15 @@
+%% -*- mode: erlang -*-
+{application, sqerlbench,
+ [
+  {description, "the sqerlbench project"},
+  {vsn, "0.0.1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  sqerl
+                 ]},
+  {mod, { sqerlbench_app, []}},
+  {env, []}
+ ]}.
+%% vim: set filetype=erlang tabstop=2

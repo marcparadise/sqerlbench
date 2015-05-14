@@ -1,0 +1,6 @@
+results
+basho_bench/
+deps/
+ebin/
+.rebar/
+priv/tests.config
