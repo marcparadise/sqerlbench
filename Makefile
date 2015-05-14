@@ -25,6 +25,11 @@ allclean: clean
 basho_bench/basho_bench:
 	$(MAKE) -C basho_bench -j 4
 
+console: compile
+	echo 'After shell starts, run: basho_bench_config:load("priv/tests.config")'
+	erl -pa ebin -pa deps/*/ebin -pa basho_bench/ebin
+
+
 # Targets for graph generation
 
 # Not working yet

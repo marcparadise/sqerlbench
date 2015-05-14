@@ -4,3 +4,4 @@ deps/
 ebin/
 .rebar/
 priv/tests.config
+*.dump

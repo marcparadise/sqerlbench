@@ -1,6 +1,7 @@
 -module(sqerlbench_tools).
 -export([cleanup/0,
-         setup/0]).
+         setup/0,
+         load_config/0]).
 
 % Different versions are named differently:
 % defined in rebar.config based on currnet versions...
@@ -38,6 +39,10 @@ cleanup() ->
             ok
     end,
     [application:stop(A) || A <- lists:reverse(?APPS ++ [sqerl])].
+
+% Helper for user from console
+load_config() ->
+    basho_bench_config:load([privpath("tests.config")]).
 
 %% Internal
 config() ->
@@ -84,8 +89,7 @@ create_db() ->
     valid_setup_results(?EPGSQL:squery(C, io_lib:format("GRANT ALL PRIVILEGES ON DATABASE ~s TO ~s",[DBName, DBUser]))),
     ok = ?EPGSQL:close(C),
     % TODO NAME
-    F = filename:join(code:priv_dir(sqerlbench), config_value(postgres, schema)),
-    io:fwrite("~p~n", [F]),
+    F = privpath(config_value(postgres, schema)),
     {ok, Schema} = file:read_file(F),
     % Object creation we do as user
     C2 = user_connection(),
@@ -95,7 +99,7 @@ create_db() ->
 
 populate_db() ->
     C = user_connection(),
-    F = filename:join(code:priv_dir(sqerlbench), config_value(postgres, populate)),
+    F = privpath(config_value(postgres, populate)),
     {ok, Populate} = file:read_file(F),
     valid_insert_results(?EPGSQL:squery(C, Populate)),
     ok = ?EPGSQL:close(C).
@@ -124,4 +128,12 @@ destroy_db() ->
     ok = ?EPGSQL:close(C).
 
 
+privpath(File) ->
+    case code:priv_dir(sqerlbench) of
+        {error, _} ->
+            {ok, WD} = file:get_cwd(),
+            filename:join([WD, "priv", File]);
+        Path ->
+            filename:join(Path, File)
+    end.
 
