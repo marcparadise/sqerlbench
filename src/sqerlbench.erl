@@ -22,6 +22,16 @@ run(select_miss, _KeyGen, _ValueGen, State) ->
         {ok, _}  ->
             {ok, State}
     end;
+run(statement_update, _KeyGen, _ValueGen, #state{id = Id, last_key = LastKey} = State) ->
+    UpdateKey = make_key(Id, LastKey),
+    Args = [UpdateKey, <<"different_org_id">>],
+    case sqerl:statement(update_node_org, Args) of
+        {error, Any} ->
+            {error, Any, State};
+        _ ->
+            {ok, State}
+    end;
+
 run(statement_ins, _KeyGen, _ValueGen, #state{id = Id, last_key = Key} = State) ->
     NewKey = make_key(Id, Key+1),
     AuthKey = make_key(Id, Key+2),
