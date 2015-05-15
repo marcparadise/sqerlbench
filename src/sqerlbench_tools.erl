@@ -2,6 +2,7 @@
 -export([cleanup/0,
          setup/0,
          load_config/0]).
+-compile(export_all).
 
 % Different versions are named differently:
 % defined in rebar.config based on currnet versions...

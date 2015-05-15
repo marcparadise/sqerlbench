@@ -9,6 +9,9 @@ compile: basho_bench/basho_bench deps/
 basho_bench/:
 	git clone git://github.com/basho/basho_bench.git
 
+basho_bench/basho_bench: basho_bench
+	$(MAKE) -C basho_bench -j 4
+
 bench: compile
 	basho_bench/basho_bench --results-dir results ./priv/tests.config
 
@@ -22,12 +25,9 @@ clean:
 allclean: clean
 	rm -rf results
 
-basho_bench/basho_bench:
-	$(MAKE) -C basho_bench -j 4
 
 console: compile
-	echo 'After shell starts, run: basho_bench_config:load("priv/tests.config")'
-	erl -pa ebin -pa deps/*/ebin -pa basho_bench/ebin
+	@erl -pa ebin -pa deps/*/ebin -pa basho_bench/ebin -eval 'sqerlbench_tools:load_config()' -eval 'sqerlbench_tools:setup()'
 
 
 # Targets for graph generation
